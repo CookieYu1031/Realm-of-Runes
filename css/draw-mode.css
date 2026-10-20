@@ -1,0 +1,18 @@
+/* draw-mode.css — 抽選起始玩家模式 */
+/* 待抽選：全部先變成中性灰（暫時蓋過金色／灰色） */
+.record-btn[data-state="draw-idle"] { background: var(--gray); color: #d0d0d0; }
+/* 點過、未選中：藍色 */
+.record-btn[data-state="safe"]      { background: var(--blue); color: #fff; box-shadow: 0 0 16px rgba(59, 130, 246, .6); }
+/* 選中：紅色 */
+.record-btn[data-state="picked"]    { background: var(--red);  color: #fff; box-shadow: 0 0 34px rgba(239, 68, 68, 1); animation: pop .5s ease-out; }
+@keyframes pop { from { transform: scale(.85); } 60% { transform: scale(1.1); } to { transform: scale(1); } }
+
+/* 抽選中，標題欄暫時顯示引導文字 */
+#title.is-guide {
+  max-width: calc(100% - 140px);   /* 避開左右兩顆按鈕 */
+  padding: .4em .3em;
+  font-size: 1.05rem;
+  letter-spacing: .04em;
+  text-align: center;
+  line-height: 1.4;
+}

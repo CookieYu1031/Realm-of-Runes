@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <!-- 封鎖雙指縮放（依需求原樣加入） -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#1a1a1a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>符文之境</title>
+
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="data/icon.svg">
+  <link rel="apple-touch-icon" href="data/apple-touch-icon.png">
+
+  <!-- 樣式：一個區塊一個檔案 -->
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/top-bar.css">
+  <link rel="stylesheet" href="css/grid.css">
+  <link rel="stylesheet" href="css/bottom-bar.css">
+  <link rel="stylesheet" href="css/draw-mode.css">
+  <link rel="stylesheet" href="css/modal.css">
+  <link rel="stylesheet" href="css/toast.css">
+  <link rel="stylesheet" href="css/landscape-overlay.css">
+  <link rel="stylesheet" href="css/game-over.css">
+</head>
+<body>
+
+  <!-- ===== 主畫面：上（標題欄）／中（8 個按鈕）／下（計時欄） ===== -->
+  <div id="app">
+    <header id="top-bar" class="bar">
+      <button id="back-btn" type="button" aria-label="返回上一步">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
+      </button>
+      <h1 id="title" data-control>符文之境</h1>
+      <button id="draw-btn" type="button" aria-label="抽選起始玩家（長按進入）">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V4s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22v-8"/></svg>
+      </button>
+    </header>
+
+    <main id="grid-area">
+      <div id="grid" role="group" aria-label="八個錄音按鈕"></div>
+    </main>
+
+    <footer id="bottom-bar" class="bar">
+      <button id="timer" type="button" aria-label="計時器">15:00</button>
+    </footer>
+  </div>
+
+  <!-- ===== 操作說明 Modal（開啟網頁時先顯示） ===== -->
+  <div id="intro-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="intro-title">
+    <div class="modal-content">
+      <h2 id="intro-title">符文之境 操作說明</h2>
+      <ul class="help-list">
+        <li><b>長按符號</b>：錄音（放開停止，最長 20 秒；已錄製者會被覆蓋）</li>
+        <li><b>雙擊符號</b>：播放錄音</li>
+        <li><b>點擊空白處</b>：停止播放</li>
+        <li><b>按住符號往上拖到標題欄</b>：刪除該錄音</li>
+        <li><b>點擊返回鍵</b>：復原上一個刪除／覆蓋</li>
+        <li><b>長按返回鍵</b>：清空所有錄音與時間</li>
+        <li><b>點擊計時器</b>：開始／暫停</li>
+        <li><b>長按計時器</b>：設定時間</li>
+        <li><b>長按旗子</b>：抽選起始玩家（輪流點符號，點到紅色的先手）</li>
+        <li><b>長按標題</b>：再次顯示此說明</li>
+      </ul>
+      <p id="intro-error" class="modal-error" hidden></p>
+      <button id="intro-start" class="modal-btn" type="button">同意權限並開始</button>
+      <button id="intro-skip" class="modal-btn secondary" type="button" hidden>略過，先不錄音</button>
+    </div>
+  </div>
+
+  <!-- ===== 計時器設定 Modal ===== -->
+  <div id="timer-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="timer-modal-title" hidden>
+    <div class="modal-content">
+      <h3 id="timer-modal-title">設定時間</h3>
+      <div class="modal-choices">
+        <button class="modal-btn choice" type="button" data-minutes="10">10 分</button>
+        <button class="modal-btn choice" type="button" data-minutes="15">15 分</button>
+        <button class="modal-btn choice" type="button" data-minutes="20">20 分</button>
+        <button class="modal-btn choice" type="button" data-minutes="30">30 分</button>
+      </div>
+      <button id="timer-reset" class="modal-btn danger" type="button">重置計時器</button>
+      <button id="timer-cancel" class="modal-btn secondary" type="button">取消</button>
+    </div>
+  </div>
+
+  <!-- ===== 通用確認 Modal（層級最高，可疊在其他 Modal 上） ===== -->
+  <div id="confirm-modal" class="modal-overlay confirm" role="alertdialog" aria-modal="true" aria-labelledby="confirm-text" hidden>
+    <div class="modal-content">
+      <h3 id="confirm-text">確定執行？</h3>
+      <button id="confirm-yes" class="modal-btn danger" type="button">確定</button>
+      <button id="confirm-no" class="modal-btn secondary" type="button">取消</button>
+    </div>
+  </div>
+
+  <!-- ===== 遊戲結束遮罩 ===== -->
+  <div id="game-over" role="alertdialog" aria-label="遊戲結束" hidden>
+    <div class="game-over-title">遊戲結束</div>
+    <div class="game-over-hint">點擊畫面重置時間</div>
+  </div>
+
+  <!-- ===== 橫放遮罩（CSS Media Query 控制顯示） ===== -->
+  <div id="landscape-overlay">請將手機轉回直立方向以繼續遊戲</div>
+
+  <noscript><p style="color:#fff;padding:2rem">請啟用 JavaScript 以使用符文之境。</p></noscript>
+
+  <!-- ES Module：一個功能一個檔案，由 main.js 統一組裝 -->
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

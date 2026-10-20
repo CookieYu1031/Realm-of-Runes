@@ -1,0 +1,17 @@
+/* bottom-bar.css — 底部倒數計時欄 */
+#bottom-bar { border-top: 2px solid var(--bar-border); }
+
+#timer {
+  padding: 0 .6em;
+  background: none;
+  border: 0;
+  font-size: clamp(2.8rem, 15vw, 4.2rem);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .06em;
+  line-height: 1;
+  transition: color .2s;
+}
+/* 狀態：idle 未開始／running 倒數中／paused 暫停中 */
+#timer[data-state="paused"]  { color: #fbbf24; }
+#timer[data-state="over"]    { color: var(--red); }

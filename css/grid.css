@@ -1,0 +1,65 @@
+/* grid.css — 中部 2x4 錄音按鈕與四種狀態 */
+#grid-area {
+  position: relative;
+  z-index: var(--z-grid);      /* 拖曳中的按鈕可蓋過標題欄 */
+  container-type: size;        /* 讓格子大小能同時依「寬」與「高」計算 */
+  display: grid;
+  place-items: center;
+  min-height: 0;
+}
+
+#grid {
+  --gap: 14px;
+  --pad: 16px;
+  /* 退路：不支援 container query 單位的舊瀏覽器 */
+  --cell: 36vw;
+  display: grid;
+  grid-template-columns: repeat(2, var(--cell));
+  grid-auto-rows: var(--cell);
+  gap: var(--gap);
+}
+/* 正解：取「寬度可容納 2 欄」與「高度可容納 4 列」的較小值 → 矮螢幕也不會被切掉 */
+@supports (width: 1cqw) {
+  #grid {
+    --cell: min(
+      calc((100cqw - 2 * var(--pad) - var(--gap)) / 2),
+      calc((100cqh - 2 * var(--pad) - 3 * var(--gap)) / 4)
+    );
+  }
+}
+
+.record-btn {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 18%;
+  touch-action: none;          /* 拖曳／長按時不讓瀏覽器接手捲動 */
+  transition: background-color .2s, box-shadow .2s, color .2s;
+}
+.record-btn svg {
+  width: 52%;
+  height: 52%;
+  pointer-events: none;        /* 事件一律由按鈕本身接收 */
+}
+.record-btn .fallback { font-size: 2rem; }
+
+/* 狀態顏色 */
+.record-btn[data-state="empty"]     { background: var(--gray); color: #8a8a8a; }
+.record-btn[data-state="recorded"]  { background: var(--gold); color: #1a1a1a; box-shadow: 0 0 14px rgba(212, 175, 55, .4); }
+.record-btn[data-state="playing"]   { background: var(--blue); color: #fff; box-shadow: 0 0 20px rgba(59, 130, 246, .8); }
+.record-btn[data-state="recording"] { background: var(--red);  color: #fff; animation: breathe 1s ease-in-out infinite alternate; }
+
+@keyframes breathe {
+  from { box-shadow: 0 0 8px rgba(239, 68, 68, .5);  transform: scale(1); }
+  to   { box-shadow: 0 0 30px rgba(239, 68, 68, 1);  transform: scale(1.05); }
+}
+
+/* 拖曳中：跟著手指移動（transform 由 JS 設定） */
+.record-btn.is-dragging {
+  transition: none;
+  opacity: .9;
+  z-index: 10;
+}

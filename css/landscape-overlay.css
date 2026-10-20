@@ -1,0 +1,19 @@
+/* landscape-overlay.css — 橫放時以黑色滿版遮罩要求轉回直立 */
+#landscape-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-landscape);
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+  background: #000;
+  color: #fff;
+  font-size: 1.4rem;
+  text-align: center;
+}
+/* 只在觸控裝置（手機／平板）啟用，桌機瀏覽器視窗本來就是橫的，才方便開發測試。
+   若要完全照字面「只看方向」，把 and (pointer: coarse) 拿掉即可。 */
+@media (orientation: landscape) and (pointer: coarse) {
+  #landscape-overlay { display: flex; }
+}

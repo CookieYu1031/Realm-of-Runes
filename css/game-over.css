@@ -1,0 +1,16 @@
+/* game-over.css — 時間歸零的滿版半透明黑底紅字遮罩 */
+#game-over {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-game-over);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 24px;
+  background: rgba(0, 0, 0, .85);
+  color: var(--red);
+  cursor: pointer;
+}
+.game-over-title { font-size: clamp(3rem, 18vw, 5rem); font-weight: 800; letter-spacing: .1em; }
+.game-over-hint  { font-size: 1rem; color: #ddd; }
