@@ -8,13 +8,14 @@ const MOVE_TOLERANCE = 10; // px，超過視為拖曳（或取消長按）
  * @param {object} o
  *  longPressMs  長按門檻（ms）
  *  doubleTapMs  雙擊間隔（ms），0 = 不偵測雙擊
+ *  delayTap     true = 單擊延遲到雙擊時間窗結束才觸發（單擊會開視窗時必用，否則第二下會點到視窗）
  *  canDrag()    是否允許拖曳；不允許時，移動只會取消長按
  *  onTap / onDoubleTap / onLongPress / onLongPressEnd(cancelled)
  *  onDragStart / onDrag({x,y,dx,dy}) / onDragEnd({x,y,cancelled})
  */
 export function attachGestures(el, o = {}) {
-  const { longPressMs = 500, doubleTapMs = 0, canDrag = () => false } = o;
-  let pid = null, phase = 'idle', sx = 0, sy = 0, timer = null, lastTapAt = 0;
+  const { longPressMs = 500, doubleTapMs = 0, delayTap = false, canDrag = () => false } = o;
+  let pid = null, phase = 'idle', sx = 0, sy = 0, timer = null, lastTapAt = 0, pendingTap = null;
 
   el.addEventListener('pointerdown', (e) => {
     if (pid !== null) return;                       // 只處理第一根手指
@@ -47,6 +48,10 @@ export function attachGestures(el, o = {}) {
     pid = null; phase = 'idle';
     if (p === 'long') o.onLongPressEnd?.(cancelled);
     else if (p === 'dragging') o.onDragEnd?.({ x: e.clientX, y: e.clientY, cancelled });
+    else if (p === 'pressing' && !cancelled && doubleTapMs > 0 && delayTap) {
+      if (pendingTap !== null) { clearTimeout(pendingTap); pendingTap = null; o.onDoubleTap?.(); }
+      else pendingTap = setTimeout(() => { pendingTap = null; o.onTap?.(); }, doubleTapMs);
+    }
     else if (p === 'pressing' && !cancelled) {
       const now = performance.now();
       if (doubleTapMs > 0 && now - lastTapAt < doubleTapMs) { lastTapAt = 0; o.onDoubleTap?.(); }

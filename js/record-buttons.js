@@ -11,8 +11,8 @@ import { pick } from './draw-mode.js';
 
 // 檔名對應 data/symbols/ 內的 SVG（順序即畫面順序）
 const SYMBOLS = [
-  ['01-salt', '鹽 🜔'], ['02-sulfur', '硫磺 🜍'], ['03-quicklime', '生石灰 🝁'], ['04-sun', '太陽 ☉'],
-  ['05-saturn', '土星 ♄'], ['06-earth', '地球 ♁'], ['07-jupiter', '木星 ♃'], ['08-mercury', '水星 ☿'],
+  ['01', '鹽 🜔'], ['02', '硫磺 🜍'], ['03', '生石灰 🝁'], ['04', '太陽 ☉'],
+  ['05', '土星 ♄'], ['06', '地球 ♁'], ['07', '木星 ♃'], ['08', '水星 ☿'],
 ];
 
 const buttons = [];
@@ -20,14 +20,18 @@ let session = null;   // 目前的錄音流程 { index, released, started, endin
 
 export async function initRecordButtons() {
   const grid = document.getElementById('grid');
-  const svgs = await Promise.all(SYMBOLS.map(([file]) => loadSvg(`data/symbols/${file}.svg`)));
+  const urls = await Promise.all(SYMBOLS.map(([file]) => checkImage(`data/symbols/${file}.svg`)));
 
   SYMBOLS.forEach(([, label], i) => {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'record-btn';
     btn.dataset.index = i;
-    btn.innerHTML = svgs[i] ?? `<span class="fallback">${label.split(' ')[1]}</span>`;
+    // 符號是內嵌點陣圖的 SVG：不能直接內嵌進網頁（8 個檔案的內部 id 相同會互相衝突），
+    // 改用 CSS mask 把圖形當成遮罩，顏色由按鈕的 color 決定，各狀態配色照舊
+    btn.innerHTML = urls[i]
+      ? `<span class="symbol" style="--symbol: url('${urls[i]}')"></span>`
+      : `<span class="fallback">${label.split(' ')[1]}</span>`;
     grid.append(btn);
     buttons.push(btn);
     bindGestures(btn, i);
@@ -37,12 +41,13 @@ export async function initRecordButtons() {
   render();
 }
 
-async function loadSvg(url) {
-  try {
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(res.status);
-    return await res.text();
-  } catch { return null; }   // 失敗時退回文字符號
+function checkImage(url) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve(img.src);   // 回傳絕對網址：CSS 變數裡的相對路徑會以 css/ 資料夾為基準而找不到檔案
+    img.onerror = () => resolve(null);   // 失敗時退回文字符號
+    img.src = url;
+  });
 }
 
 /* ---------- 畫面 ---------- */
@@ -94,16 +99,24 @@ async function askDelete(i) {
 /* ---------- 錄音流程 ---------- */
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+const MIC_MSG = {
+  denied: '麥克風權限被拒絕，無法錄音。請在瀏覽器網址列的網站設定中允許麥克風',
+  unsupported: '此環境無法錄音（需要 HTTPS 與支援 MediaRecorder 的瀏覽器）',
+  error: '無法啟用麥克風，請確認裝置有麥克風且未被其他程式占用',
+};
+
 async function startRecord(i) {
-  if (!recorder.isMicReady()) { showToast('尚未取得麥克風權限，無法錄音'); return; }
+  if (session) return;
   playback.stopAll();
   const s = session = { index: i, released: false, started: false, ending: false };
   store.setActivity(i, 'recording');
   sounds.recordStart();
   await sleep(RECORD_BEEP_MS + 20);                     // 等嗶聲播完再錄，避免錄進嗶聲
   if (s.released) { session = null; store.setActivity(i, null); return; }   // 嗶聲期間已放開
-  s.started = recorder.startRecording(() => endRecord(s));                   // 20 秒自動停止
-  if (!s.started) { session = null; store.setActivity(i, null); showToast('無法開始錄音'); }
+  const r = await recorder.startRecording(() => endRecord(s));               // 此刻才開麥克風；20 秒自動停止
+  s.started = r.ok;
+  if (!r.ok) { session = null; store.setActivity(i, null); showToast(MIC_MSG[r.reason] ?? '無法開始錄音', 3500); return; }
+  if (s.released) endRecord(s);                                              // 等授權／啟動時已放開 → 立刻結束（太短會被丟棄）
 }
 
 function releaseRecord(i) {

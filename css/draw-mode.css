@@ -16,3 +16,40 @@
   text-align: center;
   line-height: 1.4;
 }
+
+/* 抽選中：在八個按鈕與左右邊界之間各顯示一段提示，轉向讓坐在側面的玩家讀得到。
+   --side = 按鈕組左（右）側剩餘的寬度；--len = 按鈕組的高度（文字沿著它排）。 */
+#grid {
+  position: relative;
+  --side: calc((100vw - 2 * var(--cell) - var(--gap)) / 2);
+  --len: calc(4 * var(--cell) + 3 * var(--gap));
+}
+@supports (width: 1cqw) {
+  #grid { --side: calc((100cqw - 2 * var(--cell) - var(--gap)) / 2); }
+}
+.draw-hint {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: var(--side);
+  overflow: hidden;
+  pointer-events: none;
+  color: var(--gold);
+  font-size: clamp(.8rem, 3.6vw, 1rem);
+  font-weight: 600;
+  letter-spacing: .06em;
+  line-height: 1.3;
+  text-align: center;
+}
+/* 文字先橫排成一條和按鈕組一樣長的帶子（窄邊放不下就折成兩行），再整條轉向 */
+.draw-hint span {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--len);
+  max-width: none;
+}
+.draw-hint-left  { right: 100%; }
+.draw-hint-left span  { transform: translate(-50%, -50%) rotate(90deg); }    /* 左側：順時針 90° */
+.draw-hint-right { left: 100%; }
+.draw-hint-right span { transform: translate(-50%, -50%) rotate(270deg); }   /* 右側：順時針 270° */

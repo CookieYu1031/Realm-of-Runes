@@ -16,6 +16,7 @@ export const getUrl = (i) => slots[i]?.url ?? null;
 export const getActivity = (i) => activity[i];
 export const setActivity = (i, a) => { activity[i] = a; notify(); };
 export const canUndo = history.canUndo;
+export const canRedo = history.canRedo;
 
 // 抽選起始玩家模式：null = 未進入；否則為 8 格標記陣列（null | 'safe' | 'picked'）
 let draw = null;
@@ -26,6 +27,7 @@ export const setDraw = (marks) => { draw = marks; notify(); };
 /** 存入新錄音；若是「覆蓋」，先把舊狀態放進復原堆疊（第一次錄音不可復原） */
 export function commitRecording(i, blob) {
   if (slots[i]) history.push(slots.slice());
+  else history.clearRedo();                     // 第一次錄音不可復原，但仍會讓重做失效
   const rec = { blob, url: URL.createObjectURL(blob) };
   created.add(rec);
   slots[i] = rec;
@@ -40,7 +42,15 @@ export function deleteRecording(i) {
 }
 
 export function undo() {
-  const snap = history.pop();
+  const snap = history.undo(slots.slice());
+  if (!snap) return false;
+  slots = snap;
+  collect(); notify();
+  return true;
+}
+
+export function redo() {
+  const snap = history.redo(slots.slice());
   if (!snap) return false;
   slots = snap;
   collect(); notify();

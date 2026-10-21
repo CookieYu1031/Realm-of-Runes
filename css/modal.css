@@ -12,6 +12,7 @@
 .modal-overlay.confirm { z-index: var(--z-confirm); }
 
 .modal-content {
+  position: relative;
   width: min(88%, 400px);
   max-height: 92dvh;
   overflow-y: auto;
@@ -29,6 +30,27 @@
   text-align: left;
   font-size: .92rem;
 }
+
+.modal-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 50%;
+  color: #ddd;
+  font-size: 1.9rem;
+  line-height: 1;
+}
+.help-list li + li { margin-top: .35em; }
+
+/* 並排按鈕列（重播介紹／規則書） */
+.modal-row { display: flex; gap: 10px; margin-top: 10px; }
+.modal-row .modal-btn { flex: 1; margin-top: 0; padding: 12px 6px; font-size: 1rem; white-space: nowrap; }
+a.modal-btn { color: inherit; text-decoration: none; text-align: center; }
 
 .modal-error {
   margin: 8px 0 0;

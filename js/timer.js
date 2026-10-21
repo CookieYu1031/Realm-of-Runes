@@ -13,6 +13,13 @@ let warned3 = false, warned1 = false;
 
 export const getDurationMin = () => durationMin;
 
+/** 遊戲進行中：計時中，或已開始後暫停（剩餘時間介於 0 與設定時間之間） */
+export const isInGame = () => running || (remainingMs > 0 && remainingMs < durationMin * 60000);
+
+/** 計時器狀態改變時通知（開始／暫停／重置／歸零；倒數中每次更新也會呼叫） */
+const listeners = new Set();
+export const onTimerChange = (fn) => { listeners.add(fn); };
+
 export function initTimer() { el = document.getElementById('timer'); reset(); }
 
 function render() {
@@ -23,6 +30,7 @@ function render() {
   el.dataset.state = remainingMs <= 0 ? 'over'
     : running ? 'running'
     : remainingMs < durationMin * 60000 ? 'paused' : 'idle';
+  listeners.forEach((fn) => fn());
 }
 
 function stopTicking() { clearInterval(tickId); tickId = null; running = false; }
@@ -41,7 +49,7 @@ export function setDuration(min) { durationMin = min; reset(); }
 /** 整個版面重置時使用：回到預設 15 分 */
 export function resetToDefault() { durationMin = DEFAULT_MINUTES; reset(); }
 
-/** 單擊：開始／暫停 */
+/** 雙擊：開始／暫停 */
 export function toggle() {
   if (remainingMs <= 0) return;
   if (running) {

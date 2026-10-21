@@ -39,10 +39,13 @@
   touch-action: none;          /* 拖曳／長按時不讓瀏覽器接手捲動 */
   transition: background-color .2s, box-shadow .2s, color .2s;
 }
-.record-btn svg {
-  width: 52%;
-  height: 52%;
+.record-btn .symbol {
+  width: 62%;
+  height: 62%;
   pointer-events: none;        /* 事件一律由按鈕本身接收 */
+  background-color: currentColor;   /* 圖形當遮罩，顏色跟著各狀態的 color */
+  -webkit-mask: var(--symbol) center / contain no-repeat;
+          mask: var(--symbol) center / contain no-repeat;
 }
 .record-btn .fallback { font-size: 2rem; }
 
