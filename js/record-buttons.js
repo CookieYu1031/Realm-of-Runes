@@ -5,7 +5,7 @@ import * as playback from './playback.js';
 import * as recorder from './recorder.js';
 import { sounds, RECORD_BEEP_MS } from './audio.js';
 import { confirmDialog } from './confirm-modal.js';
-import { setDeleteMode, getBottom } from './top-bar.js';
+import { setDeleteMode, setDeleteHint, getBottom } from './top-bar.js';
 import { showToast } from './toast.js';
 import { pick } from './draw-mode.js';
 
@@ -77,7 +77,7 @@ function bindGestures(btn, i) {
       if (store.isDrawing()) pick(i);                    // 快速連點也算抽選
       else if (store.hasRecording(i)) playback.play(i);
     },
-    onDragStart: () => btn.classList.add('is-dragging'),
+    onDragStart: () => { btn.classList.add('is-dragging'); setDeleteHint(true); },   // 一開始拖曳就提示「拖曳至此刪除」
     onDrag: ({ y, dx, dy }) => {
       btn.style.transform = `translate(${dx}px, ${dy}px) scale(1.06)`;
       setDeleteMode(y < getBottom());                   // 進入標題欄 → 標題欄變紅
@@ -87,6 +87,7 @@ function bindGestures(btn, i) {
       btn.style.transform = '';
       const inDeleteZone = !cancelled && y < getBottom();
       setDeleteMode(false);
+      setDeleteHint(false);
       if (inDeleteZone) askDelete(i);                   // 放開後才跳確認
     },
   });

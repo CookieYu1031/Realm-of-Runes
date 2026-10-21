@@ -9,7 +9,7 @@ import { showToast } from './toast.js';
 
 const DELETE_HINT = '拖曳至此刪除';
 
-let bar, backBtn, title, titleText, deleting = false;
+let bar, backBtn, title, titleText, deleting = false, hinting = false;
 
 export function initTopBar() {
   bar = document.getElementById('top-bar');
@@ -28,13 +28,18 @@ export function initTopBar() {
   refreshBackState();
 }
 
-/** 供按鈕拖曳使用：標題欄變紅並顯示「拖曳至此刪除」 / 還原 */
+/** 供按鈕拖曳使用：一開始拖曳，標題就換成「拖曳至此刪除」 / 放開後還原 */
+export function setDeleteHint(on) {
+  if (on === hinting) return;
+  hinting = on;
+  title.classList.toggle('is-hint', on);
+  title.textContent = on ? DELETE_HINT : titleText;
+}
+/** 供按鈕拖曳使用：手指進入標題欄時，標題欄變紅 / 還原 */
 export function setDeleteMode(on) {
   if (on === deleting) return;
   deleting = on;
   bar.classList.toggle('is-delete', on);
-  title.classList.toggle('is-hint', on);
-  title.textContent = on ? DELETE_HINT : titleText;
 }
 /** 標題欄下緣 Y 座標（手指超過就算進入刪除區） */
 export const getBottom = () => bar.getBoundingClientRect().bottom;

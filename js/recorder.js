@@ -24,6 +24,19 @@ function closeMic() {
   stream = null;
 }
 
+/** 進站時先要一次麥克風權限（iOS 每個網站第一次都會詢問），拿到後立刻釋放，不開始錄音。 */
+export async function primeMic() {
+  if (!navigator.mediaDevices?.getUserMedia) return;
+  try {   // 已經允許或拒絕過就不必再問（不支援查詢的瀏覽器會直接往下走）
+    const st = await navigator.permissions?.query({ name: 'microphone' });
+    if (st && st.state !== 'prompt') return;
+  } catch { /* 部分瀏覽器不支援查詢麥克風權限，忽略 */ }
+  try {
+    const s = await navigator.mediaDevices.getUserMedia({ audio: true });
+    s.getTracks().forEach((t) => t.stop());
+  } catch { /* 拒絕或失敗都不處理，長按錄音時會再提示 */ }
+}
+
 /** 挑選瀏覽器真正支援的格式（Chrome=webm、Safari=mp4），不再寫死 */
 function pickMime() {
   const list = ['audio/webm;codecs=opus', 'audio/mp4', 'audio/webm', 'audio/ogg;codecs=opus'];
